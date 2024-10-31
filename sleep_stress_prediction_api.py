@@ -49,5 +49,5 @@ def predict():
     return jsonify({'stressLevel': stress_level, 'sleepDisorder': sleep_disorder})
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5001)))
+    app.run(port=5001)
 
