@@ -8,6 +8,11 @@ app = Flask(__name__)
 onnx_model_path = 'multi_output_svm_model_pipeline.onnx'
 onnx_session = rt.InferenceSession(onnx_model_path)
 
+# Root endpoint to confirm the API is running
+@app.route('/', methods=['GET'])
+def home():
+    return "API working successfully", 200
+
 # Endpoint for prediction
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -49,5 +54,4 @@ def predict():
     return jsonify({'stressLevel': stress_level, 'sleepDisorder': sleep_disorder})
 
 if __name__ == '__main__':
-    app.run(port=5001)
-
+    app.run(host='0.0.0.0', port=5001)
