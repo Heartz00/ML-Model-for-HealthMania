@@ -18,6 +18,17 @@ def home():
 def predict():
     input_data = request.json
 
+    required_fields = ['gender', 'age', 'occupation', 'sleepDuration', 'qualityOfSleep', 
+        'physicalActivity', 'bmiCategory', 'heartRate', 'dailySteps', 
+        'systolicBP', 'diastolicBP']
+    
+    missing_fields = [field for field in required_fields if field not in input_data]
+    if missing_fields:
+        return jsonify({
+            'error': 'You need to fill in the following fields',
+            'missing_fields': missing_fields
+        }), 400
+    
     # Mappings for categorical values
     gender_map = {'Female': 0, 'Male': 1}
     occupation_map = {
@@ -51,7 +62,7 @@ def predict():
     stress_level = 'Low' if prediction[0][0] < 5 else 'High'
     sleep_disorder = 'No Disorder' if prediction[0][1] == 0 else 'Insomnia' if prediction[0][1] == 1 else 'Sleep Apnea'
 
-    return jsonify({'stressLevel': stress_level, 'sleepDisorder': sleep_disorder})
+    return jsonify({'Your Stress Level is': stress_level, 'Your Sleep Disorder is': sleep_disorder})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5001)
