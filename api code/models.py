@@ -9,8 +9,7 @@ import pickle
 # Initialize the Flask app
 app = Flask(__name__)
 
-
-# Load the model from the pickle file
+# Load the models from pickle files
 with open("food health.pkl", 'rb') as file:
     rf_health_model = pickle.load(file)
 
@@ -19,9 +18,7 @@ with open("calorie level.pkl", 'rb') as file:
 
 with open("diabetes modelss.pkl", 'rb') as file:
     diabetes_model = pickle.load(file)
-# Load the trained diabetes model
-#diabetes_model = joblib.load("diabetes modelss.pkl")
-    
+
 # Load the ONNX pipeline (scaler + model in one pipeline)
 onx_model_path = 'multi_output_svm_model_pipeline.onnx'
 onx_session = rt.InferenceSession(onx_model_path)
@@ -118,53 +115,56 @@ def predict_rf():
 # Endpoint for ONNX model predictions
 @app.route('/predict_onnx', methods=['POST'])
 def predict_onnx():
-    input_data = request.json
+    try:
+        input_data = request.json
 
-    required_fields = ['gender', 'age', 'occupation', 'sleepDuration', 'qualityOfSleep', 
-        'physicalActivity', 'bmiCategory', 'heartRate', 'dailySteps', 
-        'systolicBP', 'diastolicBP']
-    
-    missing_fields = [field for field in required_fields if field not in input_data]
-    if missing_fields:
-        return jsonify({
-            'error': 'You need to fill in the following fields',
-            'missing_fields': missing_fields
-        }), 400
-    
-    # Mappings for categorical values
-    gender_map = {'Female': 0, 'Male': 1}
-    occupation_map = {
-        'Accountant': 1, 'Doctor': 2, 'Engineer': 3, 'Lawyer': 4, 'Manager': 5,
-        'Nurse': 6, 'Salesperson': 7, 'Sales Representative': 8, 'Scientist': 9,
-        'Software Engineer': 10, 'Teacher': 11
-    }
-    bmi_map = {'Underweight': 0, 'Normal Weight': 1, 'Normal': 1, 'Overweight': 2, 'Obese': 3}
+        required_fields = ['gender', 'age', 'occupation', 'sleepDuration', 'qualityOfSleep', 
+            'physicalActivity', 'bmiCategory', 'heartRate', 'dailySteps', 
+            'systolicBP', 'diastolicBP']
+        
+        missing_fields = [field for field in required_fields if field not in input_data]
+        if missing_fields:
+            return jsonify({
+                'error': 'You need to fill in the following fields',
+                'missing_fields': missing_fields
+            }), 400
+        
+        # Mappings for categorical values
+        gender_map = {'Female': 0, 'Male': 1}
+        occupation_map = {
+            'Accountant': 1, 'Doctor': 2, 'Engineer': 3, 'Lawyer': 4, 'Manager': 5,
+            'Nurse': 6, 'Salesperson': 7, 'Sales Representative': 8, 'Scientist': 9,
+            'Software Engineer': 10, 'Teacher': 11
+        }
+        bmi_map = {'Underweight': 0, 'Normal Weight': 1, 'Normal': 1, 'Overweight': 2, 'Obese': 3}
 
-    # Convert input data into numerical form
-    input_data['gender'] = gender_map[input_data['gender']]
-    input_data['occupation'] = occupation_map[input_data['occupation']]
-    input_data['bmiCategory'] = bmi_map[input_data['bmiCategory']]
+        # Convert input data into numerical form
+        input_data['gender'] = gender_map[input_data['gender']]
+        input_data['occupation'] = occupation_map[input_data['occupation']]
+        input_data['bmiCategory'] = bmi_map[input_data['bmiCategory']]
 
-    # Prepare the input data as a NumPy array
-    input_array = np.array([[ 
-        input_data['gender'], input_data['age'], input_data['occupation'],
-        input_data['sleepDuration'], input_data['qualityOfSleep'], input_data['physicalActivity'],
-        input_data['bmiCategory'], input_data['heartRate'], input_data['dailySteps'],
-        input_data['systolicBP'], input_data['diastolicBP']
-    ]])
+        # Prepare the input data as a NumPy array
+        input_array = np.array([[ 
+            input_data['gender'], input_data['age'], input_data['occupation'],
+            input_data['sleepDuration'], input_data['qualityOfSleep'], input_data['physicalActivity'],
+            input_data['bmiCategory'], input_data['heartRate'], input_data['dailySteps'],
+            input_data['systolicBP'], input_data['diastolicBP']
+        ]])
 
-    # ONNX pipeline input processing
-    input_name = onx_session.get_inputs()[0].name
-    result = onx_session.run(None, {input_name: input_array.astype(np.float32)})
+        # ONNX pipeline input processing
+        input_name = onx_session.get_inputs()[0].name
+        result = onx_session.run(None, {input_name: input_array.astype(np.float32)})
 
-    # Extract predictions for stress level and sleep disorder
-    prediction = result[0]  # Assuming the first output is the prediction array
+        # Extract predictions for stress level and sleep disorder
+        prediction = result[0]  # Assuming the first output is the prediction array
 
-    # Map predictions back to meaningful labels
-    stress_level = 'Low' if prediction[0][0] < 5 else 'High'
-    sleep_disorder = 'No Disorder' if prediction[0][1] == 0 else 'Insomnia' if prediction[0][1] == 1 else 'Sleep Apnea'
+        # Map predictions back to meaningful labels
+        stress_level = 'Low' if prediction[0][0] < 5 else 'High'
+        sleep_disorder = 'No Disorder' if prediction[0][1] == 0 else 'Insomnia' if prediction[0][1] == 1 else 'Sleep Apnea'
 
-    return jsonify({'Your Stress Level is': stress_level, 'Your Sleep Disorder is': sleep_disorder})
+        return jsonify({'Your Stress Level is': stress_level, 'Your Sleep Disorder is': sleep_disorder})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 # Endpoint for Pregnant Women Diet Recommendation
 @app.route('/recommend_diet', methods=['POST'])
@@ -172,84 +172,26 @@ def recommend_diet():
     try:
         # Load recommendation data
         df = pd.read_csv('recommend_data.csv')
-        
-        # Helper functions
-    def recommend(caloric_level, caloric_value, n=10):
-        filtered_data = df[df['caloric level'] == caloric_level]
-        print(f"Filtered data for caloric level '{caloric_level}':", filtered_data.shape)  # Log size
-        sorted_diets = filtered_data.sort_values(by=['Energ_Kcal'], ascending=False)
-        print(f"Sorted diets by 'Energ_Kcal':", sorted_diets.head())  # Log sorted diets
-        recommended_diets = sorted_diets[
-            (sorted_diets['Energ_Kcal'] >= caloric_value) & 
-            (sorted_diets['Energ_Kcal'] <= caloric_value + 100)
-        ]
-        print(f"Recommended diets within caloric range {caloric_value} - {caloric_value + 100}:", recommended_diets.head())  # Log recommended
-        return recommended_diets.head(n)[['Shrt_Desc', 'Energ_Kcal']].to_dict(orient='records')
-    
 
-        def nutrient(age, height, weight, preg_stage, active):
-            activity_levels = {
-                "sedentary": 1.2,
-                "light active": 1.375,
-                "moderately active": 1.55,
-                "very active": 1.75
-            }
-            active_multiplier = activity_levels.get(active.lower(), 1.2)
-            bmi = weight / (height ** 2)
-            
-            weight_goals = {
-                "underweight": {"firsttrimester": 2, "secondtrimester": 10, "thirdtrimester": 18},
-                "healthyweight": {"firsttrimester": 2, "secondtrimester": 10, "thirdtrimester": 16},
-                "overweight": {"firsttrimester": 2, "secondtrimester": 7, "thirdtrimester": 11},
-            }
-            bmi_category = "underweight" if bmi < 18.5 else "healthyweight" if bmi <= 25 else "overweight"
-            goal = weight_goals[bmi_category][preg_stage.lower()]
+        # Define the helper function for recommendations
+        def recommend(caloric_level, caloric_value, n=10):
+            filtered_data = df[df['caloric level'] == caloric_level]
+            sorted_diets = filtered_data.sort_values(by=['Energ_Kcal'], ascending=False)
+            recommended_diets = sorted_diets[
+                (sorted_diets['Energ_Kcal'] >= caloric_value) & 
+                (sorted_diets['Energ_Kcal'] <= caloric_value + 100)
+            ]
+            return recommended_diets.head(n)[['Shrt_Desc', 'Energ_Kcal']].to_dict(orient='records')
 
-            bmr = 10 * weight + 6.25 * height * 100 - 5 * age - 161
-            caloric_intake = bmr * active_multiplier + goal * 100
-            return caloric_intake
+        # Placeholder logic for diet recommendation input (to be customized based on input logic)
+        input_data = request.json
+        caloric_level = input_data.get('caloric_level', 'Normal')
+        caloric_value = input_data.get('caloric_value', 2000)
 
-        def calorie_classify(caloric_intake):
-            if caloric_intake < 300:
-                return "low"
-            elif 300 <= caloric_intake <= 350:
-                return "mid"
-            return "high"
-
-        # Get user input from request
-        data = request.get_json()
-        if not data:
-            return jsonify({"error": "Invalid input, JSON data is required"}), 400
-        
-        # Extract and validate user inputs
-        age = data.get("age")
-        height = data.get("height")
-        weight = data.get("weight")
-        preg_stage = data.get("preg_stage")
-        active = data.get("active")
-
-        if None in [age, height, weight, preg_stage, active]:
-            return jsonify({"error": "Missing required fields"}), 400
-
-        # Calculate caloric intake and classify
-        caloric_intake = nutrient(age, height, weight, preg_stage, active)
-        caloric_classification = calorie_classify(caloric_intake)
-
-        # Generate recommendations
-        recommendations = recommend(caloric_classification, caloric_intake, n=5)
-
-        # Return the results
-        response = {
-            "caloric_intake": caloric_intake,
-            "caloric_classification": caloric_classification,
-            "diet_recommendations": recommendations
-        }
-        return jsonify(response)
-
+        recommended_diets = recommend(caloric_level, caloric_value)
+        return jsonify(recommended_diets)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5001)
