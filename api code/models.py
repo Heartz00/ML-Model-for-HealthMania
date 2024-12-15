@@ -77,7 +77,7 @@ def predict_diabetes():
         return jsonify({"error": str(e)}), 500
 
 # Endpoint for Random Forest model predictions
-@app.route('/predict_rf', methods=['POST'])
+@app.route('/predict_calorie_health', methods=['POST'])
 def predict_rf():
     try:
         # Get JSON input
@@ -113,7 +113,7 @@ def predict_rf():
         return jsonify({"error": str(e)}), 500
 
 # Endpoint for ONNX model predictions
-@app.route('/predict_onnx', methods=['POST'])
+@app.route('/predict_sleep_stress', methods=['POST'])
 def predict_onnx():
     try:
         input_data = request.json
@@ -163,33 +163,6 @@ def predict_onnx():
         sleep_disorder = 'No Disorder' if prediction[0][1] == 0 else 'Insomnia' if prediction[0][1] == 1 else 'Sleep Apnea'
 
         return jsonify({'Your Stress Level is': stress_level, 'Your Sleep Disorder is': sleep_disorder})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-# Endpoint for Pregnant Women Diet Recommendation
-@app.route('/recommend_diet', methods=['POST'])
-def recommend_diet():
-    try:
-        # Load recommendation data
-        df = pd.read_csv('recommend_data.csv')
-
-        # Define the helper function for recommendations
-        def recommend(caloric_level, caloric_value, n=10):
-            filtered_data = df[df['caloric level'] == caloric_level]
-            sorted_diets = filtered_data.sort_values(by=['Energ_Kcal'], ascending=False)
-            recommended_diets = sorted_diets[
-                (sorted_diets['Energ_Kcal'] >= caloric_value) & 
-                (sorted_diets['Energ_Kcal'] <= caloric_value + 100)
-            ]
-            return recommended_diets.head(n)[['Shrt_Desc', 'Energ_Kcal']].to_dict(orient='records')
-
-        # Placeholder logic for diet recommendation input (to be customized based on input logic)
-        input_data = request.json
-        caloric_level = input_data.get('caloric_level', 'Normal')
-        caloric_value = input_data.get('caloric_value', 2000)
-
-        recommended_diets = recommend(caloric_level, caloric_value)
-        return jsonify(recommended_diets)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
