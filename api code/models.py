@@ -100,7 +100,7 @@ def predict_rf():
 
         # Map predictions back to readable labels (if encoded)
         calorie_label = {1: 'Low', 2: 'Normal', 0: 'High'}  # Example mapping
-        health_label = {1: 'Unhealthy', 0: 'Healthy'}  # Example mapping
+        health_label = {1: 'This Food seems Unhealthy', 0: 'This Food is Healthy'}  # Example mapping
 
         # Return the predictions
         response = {
