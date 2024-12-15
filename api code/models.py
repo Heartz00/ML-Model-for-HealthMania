@@ -174,14 +174,18 @@ def recommend_diet():
         df = pd.read_csv('recommend_data.csv')
         
         # Helper functions
-        def recommend(caloric_level, caloric_value, n=10):
-            filtered_data = df[df['caloric level'] == caloric_level]
-            sorted_diets = filtered_data.sort_values(by=['Energ_Kcal'], ascending=False)
-            recommended_diets = sorted_diets[
-                (sorted_diets['Energ_Kcal'] >= caloric_value) & 
-                (sorted_diets['Energ_Kcal'] <= caloric_value + 100)
-            ]
-            return recommended_diets.head(n)[['Shrt_Desc', 'Energ_Kcal']].to_dict(orient='records')
+    def recommend(caloric_level, caloric_value, n=10):
+        filtered_data = df[df['caloric level'] == caloric_level]
+        print(f"Filtered data for caloric level '{caloric_level}':", filtered_data.shape)  # Log size
+        sorted_diets = filtered_data.sort_values(by=['Energ_Kcal'], ascending=False)
+        print(f"Sorted diets by 'Energ_Kcal':", sorted_diets.head())  # Log sorted diets
+        recommended_diets = sorted_diets[
+            (sorted_diets['Energ_Kcal'] >= caloric_value) & 
+            (sorted_diets['Energ_Kcal'] <= caloric_value + 100)
+        ]
+        print(f"Recommended diets within caloric range {caloric_value} - {caloric_value + 100}:", recommended_diets.head())  # Log recommended
+        return recommended_diets.head(n)[['Shrt_Desc', 'Energ_Kcal']].to_dict(orient='records')
+    
 
         def nutrient(age, height, weight, preg_stage, active):
             activity_levels = {
