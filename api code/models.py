@@ -4,17 +4,22 @@ import numpy as np
 import pandas as pd
 import onnxruntime as rt
 from sklearn.preprocessing import RobustScaler
+import pickle
 
 # Initialize the Flask app
 app = Flask(__name__)
 
-# Load the trained Random Forest models
-rf_health_model = joblib.load("food health.joblib")
-rf_calorie_model = joblib.load("calorie level.joblib")
 
-# Load the trained diabetes model
-diabetes_model = joblib.load("diabetes model.joblib")
+# Load the model from the pickle file
+with open("food health.pkl", 'rb') as file:
+    rf_health_model = pickle.load(file)
 
+with open("calorie level.pkl", 'rb') as file:
+    rf_calorie_model = pickle.load(file)
+
+with open("diabetes model.pkl", 'rb') as file:
+    diabetes_model = pickle.load(file)
+    
 # Load the ONNX pipeline (scaler + model in one pipeline)
 onx_model_path = 'multi_output_svm_model_pipeline.onnx'
 onx_session = rt.InferenceSession(onx_model_path)
