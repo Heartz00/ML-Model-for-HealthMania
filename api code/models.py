@@ -17,8 +17,10 @@ with open("food health.pkl", 'rb') as file:
 with open("calorie level.pkl", 'rb') as file:
     rf_calorie_model = pickle.load(file)
 
+with open("diabetes modelss.pkl", 'rb') as file:
+    diabetes_model = pickle.load(file)
 # Load the trained diabetes model
-diabetes_model = joblib.load("diabetes models.pkl")
+#diabetes_model = joblib.load("diabetes modelss.pkl")
     
 # Load the ONNX pipeline (scaler + model in one pipeline)
 onx_model_path = 'multi_output_svm_model_pipeline.onnx'
