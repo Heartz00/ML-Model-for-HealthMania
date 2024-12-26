@@ -91,8 +91,8 @@ const NavLinks = styled.div`
 const NavLink = styled.a`
   color: #001f3d;
   text-decoration: none;
-  font-size: 1em;
-  font-weight: 20;
+  font-size: 0.9em;
+  font-weight: 200;
   &:hover {
     color: rgba(177, 95, 13, 0.94)); 
   }
@@ -145,7 +145,7 @@ const ContentSection = styled.div`
 `;
 
 const Title = styled.h1`
-  font-size: 3em;
+  font-size: 4em;
   margin-bottom: 20px;
   color: #3a7bd5; /* Light Blue */
   font-weight: bold;
@@ -227,7 +227,7 @@ const HomePage = () => {
       <ShadowContainer>
         <HomeContainer>
           <ContentSection>
-            <Title>Empower Your Health</Title>
+            <Title>HealthMania</Title>
             <Subtitle>
               Revolutionizing health monitoring with cutting-edge AI solutions for a healthier future.
             </Subtitle>
