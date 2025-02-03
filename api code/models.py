@@ -162,7 +162,7 @@ def predict_onnx():
         stress_level = 'Low' if prediction[0][0] < 5 else 'High'
         sleep_disorder = 'No Disorder' if prediction[0][1] == 0 else 'Insomnia' if prediction[0][1] == 1 else 'Sleep Apnea'
 
-        return jsonify({'Your Stress Level is': stress_level, 'Your Sleep Disorder is': sleep_disorder})
+        return jsonify({'Stresslevel': stress_level, 'SleepDisorder': sleep_disorder})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
