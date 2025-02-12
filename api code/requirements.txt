@@ -1,8 +1,7 @@
 fastapi
-joblib
+uvicorn
+mangum
+onnxruntime
 numpy
 pandas
 scikit-learn
-gunicorn
-onnxruntime
-uvicorn
