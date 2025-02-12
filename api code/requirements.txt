@@ -1,7 +1,8 @@
-Flask
+fastapi
 joblib
 numpy
 pandas
 scikit-learn
 gunicorn
 onnxruntime
+uvicorn
