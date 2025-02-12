@@ -84,7 +84,7 @@ def calorie_classify(caloric_intake):
 
 @app.get("/")
 async def root():
-    return {"message": "Hello from FastAPI on Vercel!"}
+    return {"message": "Hello API is live"}
 
 @app.post("/recommend_diet")
 async def diet_recommendation(data: dict):
