@@ -159,8 +159,88 @@ async def predict_rf(data: dict):
             "calorie_level": calorie_label.get(calorie_prediction[0], "Unknown"),
             "health_status": health_label.get(health_prediction[0], "Unknown")
         }
+        
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/predict_sleep_stress")
+async def predict_onnx(data: dict):
+    try:
+        required_fields = ['gender', 'age', 'occupation', 'sleepDuration', 'qualityOfSleep', 
+            'physicalActivity', 'bmiCategory', 'heartRate', 'dailySteps', 
+            'systolicBP', 'diastolicBP']
+        
+        missing_fields = [field for field in required_fields if field not in data]
+        if missing_fields:
+            raise HTTPException(status_code=400, detail={
+                'error': 'You need to fill in the following fields',
+                'missing_fields': missing_fields
+            })
+        
+        # Mappings for categorical values
+        gender_map = {'Female': 0, 'Male': 1}
+        occupation_map = {
+            'Accountant': 1, 'Doctor': 2, 'Engineer': 3, 'Lawyer': 4, 'Manager': 5,
+            'Nurse': 6, 'Salesperson': 7, 'Sales Representative': 8, 'Scientist': 9,
+            'Software Engineer': 10, 'Teacher': 11
+        }
+        bmi_map = {'Underweight': 0, 'Normal Weight': 1, 'Normal': 1, 'Overweight': 2, 'Obese': 3}
+
+        # Convert input data into numerical form
+        data['gender'] = gender_map.get(data['gender'], -1)
+        data['occupation'] = occupation_map.get(data['occupation'], -1)
+        data['bmiCategory'] = bmi_map.get(data['bmiCategory'], -1)
+
+        if -1 in [data['gender'], data['occupation'], data['bmiCategory']]:
+            raise HTTPException(status_code=400, detail="Invalid categorical values provided.")
+
+        # Prepare the input data as a NumPy array
+        input_array = np.array([[ 
+            data['gender'], data['age'], data['occupation'],
+            data['sleepDuration'], data['qualityOfSleep'], data['physicalActivity'],
+            data['bmiCategory'], data['heartRate'], data['dailySteps'],
+            data['systolicBP'], data['diastolicBP']
+        ]])
+
+        # ONNX pipeline input processing
+        input_name = onx_session.get_inputs()[0].name
+        result = onx_session.run(None, {input_name: input_array.astype(np.float32)})
+
+        # Extract predictions for stress level and sleep disorder
+        prediction = result[0]  # Assuming the first output is the prediction array
+
+        # Map predictions back to meaningful labels
+        stress_level = 'Low' if prediction[0][0] < 5 else 'High'
+        sleep_disorder = 'No Disorder' if prediction[0][1] == 0 else 'Insomnia' if prediction[0][1] == 1 else 'Sleep Apnea'
+
+        # Generate recommendations
+        recommendations = []
+        if stress_level == 'High':
+            recommendations.append("Engage in relaxation techniques such as deep breathing or meditation.")
+            recommendations.append("Ensure regular physical activity and a balanced diet.")
+            recommendations.append("Maintain a consistent sleep schedule and avoid caffeine before bedtime.")
+            recommendations.append("Practice mindfulness or yoga to manage stress effectively.")
+            recommendations.append("Consider speaking with a counselor or therapist for stress management strategies.")
+        else:
+            recommendations.append("Great job! Your stress level is low. Keep maintaining a balanced lifestyle.")
+
+        if sleep_disorder == 'Insomnia':
+            recommendations.append("Establish a bedtime routine and avoid screens before sleeping.")
+            recommendations.append("Try relaxation exercises and limit naps during the day.")
+        elif sleep_disorder == 'Sleep Apnea':
+            recommendations.append("Consider seeing a doctor for sleep studies and possible CPAP therapy.")
+            recommendations.append("Maintain a healthy weight and sleep on your side instead of your back.")
+        else:
+            recommendations.append("Congratulations! You have no sleep disorders. Keep up with good sleep habits.")
+        
+        return {
+            'Stresslevel': stress_level,
+            'SleepDisorder': sleep_disorder,
+            'Recommendations': recommendations
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 # Required for Vercel
 handler = Mangum(app)
