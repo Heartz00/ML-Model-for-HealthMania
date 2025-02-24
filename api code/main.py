@@ -214,29 +214,31 @@ async def predict_onnx(data: dict):
         sleep_disorder = 'No Disorder' if prediction[0][1] == 0 else 'Insomnia' if prediction[0][1] == 1 else 'Sleep Apnea'
 
         # Generate recommendations
-        recommendations = []
+        recommendation_stress = []
+        recommendation_sleep = []
         if stress_level == 'High':
-            recommendations.append("Engage in relaxation techniques such as deep breathing or meditation.")
-            recommendations.append("Ensure regular physical activity and a balanced diet.")
-            recommendations.append("Maintain a consistent sleep schedule and avoid caffeine before bedtime.")
-            recommendations.append("Practice mindfulness or yoga to manage stress effectively.")
-            recommendations.append("Consider speaking with a counselor or therapist for stress management strategies.")
+            recommendation_stress.append("Engage in relaxation techniques such as deep breathing or meditation.")
+            recommendation_stress.append("Ensure regular physical activity and a balanced diet.")
+            recommendation_stress.append("Maintain a consistent sleep schedule and avoid caffeine before bedtime.")
+            recommendation_stress.append("Practice mindfulness or yoga to manage stress effectively.")
+            recommendation_stress.append("Consider speaking with a counselor or therapist for stress management strategies.")
         else:
-            recommendations.append("Great job! Your stress level is low. Keep maintaining a balanced lifestyle.")
+            recommendation_stress.append("Great job! Your stress level is low. Keep maintaining a balanced lifestyle.")
 
         if sleep_disorder == 'Insomnia':
-            recommendations.append("Establish a bedtime routine and avoid screens before sleeping.")
-            recommendations.append("Try relaxation exercises and limit naps during the day.")
+            recommendation_sleep.append("Establish a bedtime routine and avoid screens before sleeping.")
+            recommendation_sleep.append("Try relaxation exercises and limit naps during the day.")
         elif sleep_disorder == 'Sleep Apnea':
-            recommendations.append("Consider seeing a doctor for sleep studies and possible CPAP therapy.")
-            recommendations.append("Maintain a healthy weight and sleep on your side instead of your back.")
+            recommendation_sleep.append("Consider seeing a doctor for sleep studies and possible CPAP therapy.")
+            recommendation_sleep.append("Maintain a healthy weight and sleep on your side instead of your back.")
         else:
-            recommendations.append("Congratulations! You have no sleep disorders. Keep up with good sleep habits.")
+            recommendation_sleep.append("Congratulations! You have no sleep disorders. Keep up with good sleep habits.")
         
         return {
             'Stresslevel': stress_level,
             'SleepDisorder': sleep_disorder,
-            'Recommendations': recommendations
+            'Recommendation_stress': recommendation_stress,
+            'Recommendation_sleep': recommendation_sleep
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
