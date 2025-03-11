@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware  # Import CORSMiddleware
 from mangum import Mangum  # Required for Vercel
 import os
 import pickle
@@ -9,6 +10,15 @@ import onnxruntime as rt
 from sklearn.preprocessing import RobustScaler
 
 app = FastAPI()
+
+# Enable CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allows all headers
+)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
