@@ -73,8 +73,9 @@ async def nutrient(age, height, weight, preg_stage, active):
         'moderately active': 1.55, 'very active': 1.75
     }
     active_factor = activity_levels.get(active.lower(), 1.2)
+    height_m = height / 100
 
-    bmi = weight / (height * height)
+    bmi = weight / (height_m * height_m)
     
     if bmi < 18.5:
         goal = 2 if preg_stage.lower() == "firsttrimester" else 10 if preg_stage.lower() == "secondtrimester" else 18
